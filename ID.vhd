@@ -7,7 +7,7 @@ use work.my_pkg.all;
 entity Inst_Decode is
 generic (inst_width : integer := 16);
 port (stall : in std_logic;
-		pc : in std_logic;
+		pc : in std_logic_vector(15 downto 0);
 		clk : in std_logic;
 		inst : in std_logic_vector(inst_width-1 downto 0);
 		op_code : out std_logic_vector(3 downto 0);
@@ -18,6 +18,7 @@ port (stall : in std_logic;
 		enable_c : out std_logic;
 		imm : out std_logic_vector(8 downto 0);
 		cz : out std_logic_vector(1 downto 0);
+		pc_out : out std_logic_vector(15 downto 0)
 		);
 end entity Inst_Decode;
 
@@ -26,8 +27,8 @@ begin
 	process(clk)
 	variable op : std_logic_vector(3 downto 0);
 	begin
-		if (rising_edge(clk)
-			if (not stall)
+		if (rising_edge(clk)) then
+			if (stall='1') then
 				op_code <= inst(15 downto 12);
 				r_a <= inst(11 downto 9);
 				r_b <= inst(8 downto 6);
@@ -39,6 +40,7 @@ begin
 					((not op(2)) and op(3) and (not op(0)));
 				enable_c <= ((not op(3)) and (not op(2)) and (op(1) xor op(0)));
 				cz <= inst(1 downto 0);
+				pc_out <= pc;
 			end if;
 		end if;
 	end process;

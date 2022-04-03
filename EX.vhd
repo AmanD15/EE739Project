@@ -4,22 +4,32 @@ use ieee.numeric_std.all;
 use ieee.std_logic_unsigned.all;
 use work.my_pkg.all;
 
-entity Inst_Decode is
+entity Execute is
 generic (inst_width : integer := 16);
 port (stall : in std_logic;
 		clk : in std_logic;
-		pc : in std_logic;
-		inst : in std_logic_vector(inst_width-1 downto 0);
-		op_code : out std_logic_vector(3 downto 0)
+		pc : in std_logic_vector(15 downto 0);
+		op_code : in std_logic_vector(3 downto 0);
+		cz : in std_logic_vector(1 downto 0);
+		data_a : in std_logic_vector(7 downto 0);
+		data_b : in std_logic_vector(7 downto 0);
+		data_out : out std_logic_vector(7 downto 0);
+		pc_out : out std_logic_vector(15 downto 0)
 		);
-end entity Inst_Decode;
+end entity Execute;
 
-architecture Decode of Inst_Decode is
+architecture Exec of Execute is
 begin
 	process(clk)
 	begin
-		if (not stall)
-			op_code <= inst(inst_width-1 downto inst_width -4);
+		if (rising_edge(clk)) then
+			if (stall='1') then
+				pc_out <= pc;
+				case op_code is
+					when 0000 => data_out <= std_logic_vector(signed(pc)+signed(imm));
+					when others => null;
+				end case;
+			end if;
 		end if;
 	end process;
-end architecture Decode;
+end architecture Exec;
