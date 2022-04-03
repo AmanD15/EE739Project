@@ -17,8 +17,10 @@ architecture Fetch of Inst_Fetch is
 begin
 	process(clk)
 	begin
-		if (not stall)
-			inst <= MEMORY(pc);
+		if (rising_edge(clk))
+			if (not stall)
+				inst <= MEMORY(pc);
+			end if;
 		end if;
 	end process;
 end architecture Fetch;
