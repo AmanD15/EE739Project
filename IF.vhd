@@ -19,7 +19,7 @@ begin
 	process(clk)
 	begin
 		if (rising_edge(clk)) then
-			if (stall='1') then
+			if (stall='0') then
 				inst <= MEMORY(pc);
 				pc_out <= pc;
 			end if;

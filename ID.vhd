@@ -28,7 +28,7 @@ begin
 	variable op : std_logic_vector(3 downto 0);
 	begin
 		if (rising_edge(clk)) then
-			if (stall='1') then
+			if (stall='0') then
 				op_code <= inst(15 downto 12);
 				r_a <= inst(11 downto 9);
 				r_b <= inst(8 downto 6);
