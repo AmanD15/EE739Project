@@ -11,10 +11,11 @@ port (stall : in std_logic;
 		pc : in std_logic_vector(15 downto 0);
 		op_code : in std_logic_vector(3 downto 0);
 		cz : in std_logic_vector(1 downto 0);
+		wb_in : in std_logic_vector(15 downto 0);
 		data_a : in std_logic_vector(15 downto 0);
 		data_b : in std_logic_vector(15 downto 0);
 		data_out : out std_logic_vector(15 downto 0);
-		write_back_add : out std_logic_vector(15 downto 0);
+		wb_out : out std_logic_vector(15 downto 0);
 		wb_enable : out std_logic;
 		pc_next : out std_logic_vector(15 downto 0)
 		);
@@ -32,6 +33,8 @@ begin
 	variable z_var : std_logic;
 	variable z_var2 : std_logic;
 	variable pc_var : std_logic_vector(15 downto 0) := std_logic_vector(unsigned(pc) + 1);
+	variable pc_var : std_logic_vector(15 downto 0) := wb_in;
+	variable wb_en : std_logic := '0';
 	
 	begin
 
@@ -50,6 +53,7 @@ begin
 						z_flag <= z_var;
 						data_out <= data_add(15 downto 0);
 						c_flag <= data_add(16);
+						wb_en := '1';
 					
 					-- add
 					when "0001" => case cz is
@@ -57,47 +61,56 @@ begin
 							z_flag <= z_var;
 							c_flag <= data_add(16);
 							data_out <= data_add(15 downto 0);
+							wb_en := '1';
 						when "01" => 
 							if (z_flag='1') then 
 								data_out <= data_add(15 downto 0);
 								z_flag <= z_var;
 								c_flag <= data_add(16);
+								wb_en := '1';
 							end if;
 						when "10" =>
 							if (c_flag='1') then
 								data_out <= data_add(15 downto 0);
 								z_flag <= z_var;
 								c_flag <= data_add(16);
+								wb_en := '1';
 							end if;
 						when "11" =>
 							data_out <= data_add2(15 downto 0);
 							if (data_add2 = (others => '0')) then z_flag <= '1'; else z_flag <= '0'; end if;
 							c_flag <= data_add2(16);
+							wb_en := '1';
 					end case;
 					
 					-- nand
 					when "0010" =>
 						case cz is
-							when "00" => data_out <= data_nand; z_flag <= z_var2;
-							when "01" => if (z_flag='1') then data_out <= data_nand; z_flag <= z_var2; end if;
-							when "10" => if (c_flag='1') then data_out <= data_nand; z_flag <= z_var2; end if;
+							when "00" => data_out <= data_nand; z_flag <= z_var2; wb_en := '1';
+							when "01" =>
+								if (z_flag='1') then data_out <= data_nand; z_flag <= z_var2; wb_en := '1'; end if;
+							when "10" =>
+								if (c_flag='1') then data_out <= data_nand; z_flag <= z_var2; wb_en := '1'; end if;
 							when others => null;
 						end case;
 						
 					--lhi
-					when "0011" => data_out <= data_b;
+					when "0011" => data_out <= data_b; wb_en := '1';
 					
 					--lw , sw
 					when "0100" | "0101" => data_out <= data_add;
 					
 					--beq
-					when "1000" => if (data_a = data_b) then 
+					when "1000" =>
+						if (wb_in = data_a) then
+							pc_var := std_logic_vector(unsigned(pc)+unsigned(data_b));
+						end if;
 					
 					-- jal
-					when "1001" => pc_var := std_logic_vector(unsigned(pc)+unsigned(data_b));
+					when "1001" => wb_var := pc_var; pc_var := std_logic_vector(unsigned(pc)+unsigned(data_b)); wb_en := '1';
 					
 					-- jlr
-					when "1010" => pc_var := data_b;
+					when "1010" => wb_var := pc_var; pc_var := data_b; wb_en := '1';
 					
 					--jri
 					when "1011" =>	pc_var := data_add;
@@ -105,6 +118,7 @@ begin
 				end case;
 				
 				pc_next <= pc_var;
+				wb_out <= wb_var;
 			end if;
 		end if;
 	end process;

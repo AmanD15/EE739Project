@@ -41,15 +41,17 @@ entity memory is
 end entity memory;
 
 architecture arch of memory is
-type RAM is array(2**addr_width-1 downto 0) of std_logic_vector(data_width-1 downto 0);
+type RAM is array(0 to 2**addr_width-1 ) of std_logic_vector(data_width-1 downto 0);
 signal storage : RAM := (others => (others => '0'));
 begin
-	process
+	process(clk)
 	begin
-		if (readWrite = '1') then
-			storage(integer(unsigned(addr))) <= data;
-		else
-			output <= storage(integer(unsigned(addr)));
+		if (falling_edge(clk)) then
+			if (readWrite = '1') then
+				storage(integer(unsigned(addr))) <= data;
+			else
+				output <= storage(integer(unsigned(addr)));
+			end if;
 		end if;
 	end process;
 end architecture arch;
