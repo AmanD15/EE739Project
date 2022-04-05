@@ -36,10 +36,10 @@ begin
 	begin
 
 	data_add := std_logic_vector(signed(data_a)+signed(data_b));
-		data_add := std_logic_vector(signed(data_a)+signed(data_b sll 1));
-		data_nand := (data_a nand data_b);
-		if (data_add = (others => '0')) then z_var := '1'; else z_var := '0'; end if;
-		if (data_nand = (others => '0')) then z_var2 := '1'; else z_var2 := '0'; end if;
+	data_add := std_logic_vector(signed(data_a)+signed(data_b sll 1));
+	data_nand := (data_a nand data_b);
+	if (data_add = (others => '0')) then z_var := '1'; else z_var := '0'; end if;
+	if (data_nand = (others => '0')) then z_var2 := '1'; else z_var2 := '0'; end if;
 	
 	if (rising_edge(clk)) then
 			if (stall='0') then
@@ -85,12 +85,13 @@ begin
 						end case;
 						
 					--lhi
-					when "0011" => data_out <= (imm9 & "0000000");
+					when "0011" => data_out <= data_b;
 					
 					--lw , sw
 					when "0100" | "0101" => data_out <= data_add;
 					
 					--beq
+					when "1000" => if (data_a = data_b) then 
 					
 					-- jal
 					when "1001" => pc_var := std_logic_vector(unsigned(pc)+unsigned(data_b));
@@ -102,7 +103,6 @@ begin
 					when "1011" =>	pc_var := data_add;
 					when others => null;
 				end case;
-				
 				
 				pc_next <= pc_var;
 			end if;
