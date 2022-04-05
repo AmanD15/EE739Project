@@ -34,6 +34,7 @@ begin
 	dut : entity work.VSCPU(arch) 
 		generic map (addr_width => addr_width, data_width => data_width)
 		port map(clk,reset,start,write_flag,addr,data);
+	
 	process
 	variable num_funcs : integer := 10;
 	variable data_to_write : std_logic_vector(data_width-1 downto 0);

@@ -5,6 +5,8 @@ use ieee.std_logic_unsigned.all;
 use work.my_pkg.all;
 use work.IF_Stage.all;
 use work.ID_Stage.all;
+use work.RA_stage.all;
+use work.EX_stage.all;
 
 entity VSCPU is
 	generic( addr_width : natural := 16;
@@ -26,21 +28,32 @@ signal stall : std_logic := '0';
 signal address : std_logic_vector(addr_width-1 downto 0);
 signal readWrite_I : std_logic := '0';
 signal inst_f : std_logic_vector(data_width-1 downto 0);
-signal pc , pc_out, pc_dec_out : std_logic_vector(addr_width-1 downto 0);
-signal op_dec : std_logic_vector(3 downto 0);
-signal r_a_dec, r_b_dec, r_c_dec : std_logic_vector(2 downto 0);
-signal cz_dec : std_logic_vector(1 downto 0);
-signal en_b,en_c : std_logic;
-signal imm : std_logic_vector(8 downto 0);
+signal pc , pc_fet, pc_dec_out, pc_ra: std_logic_vector(addr_width-1 downto 0);
+signal op_dec, op_ra : std_logic_vector(3 downto 0);
+signal r_a_dec, r_b_dec, r_c_dec, r_co, addr_5, wb_out_alu : std_logic_vector(2 downto 0);
+signal cz_dec, cz_ra : std_logic_vector(1 downto 0);
+signal en_b,en_c, enable_5, wb_enable: std_logic;
+signal imm_dec: std_logic_vector(8 downto 0);
+signal data_a_ra, data_b_ra, data_c_ra, data_5, data_out_alu : std_logic_vector(15 downto 0);
 
 begin
-address <= addr when (write_flag = '1') else pc_out; 
+address <= addr when (write_flag = '1') else pc_fet; 
 Inst_Mem : memory port map (clk , address , data , readWrite_I , inst_f);
 
-fetch_stage : Inst_Fetch port map (stall, clk, pc, pc_out);
+stage1 : Inst_Fetch port map (stall, clk, pc, pc_fet);
 
-stage2 : Inst_Decode port map (stall, pc_out, clk, inst_f, 
+stage2 : Inst_Decode port map (stall, pc_fet, clk, inst_f, 
 							op_dec, r_a_dec, r_b_dec, r_c_dec , 
-							en_b, en_c, imm, cz_dec, pc_dec_out);
-
+							en_b, en_c, imm_dec, cz_dec, pc_dec_out);
+							
+stage3 : register_read port map (stall,clk, pc_dec_out, r_a_dec, r_b_dec,
+							r_c_dec, imm_dec, op_dec, cz_dec,
+							data_a_ra,data_b_ra,data_c_ra,cz_ra,r_co,op_ra,pc_ra
+							);
+		
+stage4 : Execute port map (stall, clk,
+							pc_ra, op_ra, cz_ra,r_co,
+							data_a_ra,data_b_ra,data_c_ra,
+							data_out_alu,wb_out_alu,wb_enable,
+							pc);
 end architecture arch;
