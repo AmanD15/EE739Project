@@ -4,13 +4,12 @@ use ieee.numeric_std.all;
 use ieee.std_logic_unsigned.all;
 use work.my_pkg.all;
 
-package Decode_Stage is
+package ID_Stage is
 component Inst_Decode is
-generic (inst_width : integer := 16);
 port (stall : in std_logic;
 		pc : in std_logic_vector(15 downto 0);
 		clk : in std_logic;
-		inst : in std_logic_vector(inst_width-1 downto 0);
+		inst : in std_logic_vector(15 downto 0);
 		op_code : out std_logic_vector(3 downto 0);
 		r_a : out std_logic_vector(2 downto 0);
 		r_b : out std_logic_vector(2 downto 0);
@@ -22,7 +21,7 @@ port (stall : in std_logic;
 		pc_out : out std_logic_vector(15 downto 0)
 		);
 end component Inst_Decode;
-end package Decode_Stage;
+end package ID_Stage;
 
 library ieee;
 use ieee.std_logic_1164.all;
@@ -31,11 +30,10 @@ use ieee.std_logic_unsigned.all;
 use work.my_pkg.all;
 
 entity Inst_Decode is
-generic (inst_width : integer := 16);
 port (stall : in std_logic;
 		pc : in std_logic_vector(15 downto 0);
 		clk : in std_logic;
-		inst : in std_logic_vector(inst_width-1 downto 0);
+		inst : in std_logic_vector(15 downto 0);
 		op_code : out std_logic_vector(3 downto 0);
 		r_a : out std_logic_vector(2 downto 0);
 		r_b : out std_logic_vector(2 downto 0);

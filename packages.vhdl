@@ -7,9 +7,10 @@ package my_pkg is
 function int2slv ( int : integer; size : integer) return std_logic_vector;
 
 component memory is 
-	generic (addr_width : natural := 8;
+	generic (addr_width : natural := 16;
 				data_width : natural := 16);
-	port ( addr : in std_logic_vector(addr_width-1 downto 0);
+	port (clk : in std_logic; 
+			addr : in std_logic_vector(addr_width-1 downto 0);
 			data : in std_logic_vector(data_width-1 downto 0);
 			readWrite : in std_logic;
 			output : out std_logic_vector(data_width-1 downto 0));
@@ -31,7 +32,7 @@ use ieee.std_logic_1164.all;
 use ieee.numeric_std.all;
 
 entity memory is 
-	generic (addr_width : natural := 8;
+	generic (addr_width : natural := 16;
 				data_width : natural := 16);
 	port (clk : in std_logic;
 			addr : in std_logic_vector(addr_width-1 downto 0);
@@ -48,9 +49,9 @@ begin
 	begin
 		if (falling_edge(clk)) then
 			if (readWrite = '1') then
-				storage(integer(unsigned(addr))) <= data;
+				storage(to_integer(unsigned(addr))) <= data;
 			else
-				output <= storage(integer(unsigned(addr)));
+				output <= storage(to_integer(unsigned(addr)));
 			end if;
 		end if;
 	end process;

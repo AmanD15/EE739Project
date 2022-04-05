@@ -4,6 +4,7 @@ use ieee.numeric_std.all;
 use ieee.std_logic_unsigned.all;
 use work.my_pkg.all;
 use work.IF_Stage.all;
+use work.ID_Stage.all;
 
 entity VSCPU is
 	generic( addr_width : natural := 16;
@@ -23,18 +24,23 @@ architecture arch of VSCPU is
 
 signal stall : std_logic := '0';
 signal address : std_logic_vector(addr_width-1 downto 0);
-signal readWrite_I : std_logic;
-signal inst_fetch : std_logic_vector(data_width-1 downto 0);
-signal pc , pc_out, pc_dec_out:std_logic_vector(addr_width-1 downto 0);
+signal readWrite_I : std_logic := '0';
+signal inst_f : std_logic_vector(data_width-1 downto 0);
+signal pc , pc_out, pc_dec_out : std_logic_vector(addr_width-1 downto 0);
 signal op_dec : std_logic_vector(3 downto 0);
-signal r_a_dec, r_b_dec, r_c_dec, cz_dec : std_logic_vector(2 downto 0);
+signal r_a_dec, r_b_dec, r_c_dec : std_logic_vector(2 downto 0);
+signal cz_dec : std_logic_vector(1 downto 0);
 signal en_b,en_c : std_logic;
 signal imm : std_logic_vector(8 downto 0);
 
 begin
-Inst_Mem : memory port map (clk , address , data , readWrite_I , inst_fetch);
+address <= addr when (write_flag = '1') else pc_out; 
+Inst_Mem : memory port map (clk , address , data , readWrite_I , inst_f);
+
 fetch_stage : Inst_Fetch port map (stall, clk, pc, pc_out);
-decode_stage : Inst_Decode port map (stall, pc_out, clk, inst_fetch,
-		op_dec,r_a_dec ,r_b_dec, r_c_dec , en_b ,en_c ,imm, cz, pc_dec_out);
+
+stage2 : Inst_Decode port map (stall, pc_out, clk, inst_f, 
+							op_dec, r_a_dec, r_b_dec, r_c_dec , 
+							en_b, en_c, imm, cz_dec, pc_dec_out);
 
 end architecture arch;
