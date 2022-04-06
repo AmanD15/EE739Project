@@ -39,6 +39,7 @@ signal data_a_ra, data_b_ra, data_c_ra, data_5, data_out_alu : std_logic_vector(
 signal ma_data_in, ma_data_out : std_logic_vector(127 downto 0);
 
 begin
+
 address <= addr when (write_flag = '1') else pc_fet; 
 Inst_Mem : memory port map (clk , address , data , readWrite_I , inst_f);
 
@@ -47,7 +48,7 @@ stage1 : Inst_Fetch port map (stall => stall,clk => clk,pc => pc,pc_out => pc_fe
 stage2 : Inst_Decode port map (stall => stall,pc => pc_fet,clk => clk,inst => inst_f, 
 							op_code => op_dec,
 							r_a => r_a_dec,r_b => r_b_dec,r_c => r_c_dec , 
-							enable_b => en_b,enable_c => en_c,imm => imm_dec,
+							imm => imm_dec,
 							cz => cz_dec,pc_out => pc_dec_out);
 							
 stage3 : register_read port map (stall => stall,clk=>clk,pc => pc_dec_out,
@@ -71,7 +72,6 @@ stage5 : Mem_Access port map (stall => stall, clk => clk,
 		data_in => ma_data_in,
 		data_out => ma_data_out,
 		wb_in => wb_out_alu,
-		wb_enable => wb_enable,
-		pc_in => pc_alu,
-		pc_next => pc);
+		wb_enable => wb_enable
+		);
 end architecture arch;

@@ -15,9 +15,7 @@ port (stall : in std_logic;
 		data_in : in std_logic_vector(16*8-1 downto 0);
 		data_out : out std_logic_vector(16*8-1 downto 0);
 		wb_in : in std_logic_vector(2 downto 0);
-		wb_enable : in std_logic;
-		pc_in : in std_logic_vector(15 downto 0);
-		pc_next : out std_logic_vector(15 downto 0)
+		wb_enable : in std_logic
 		); 
 end component Mem_Access;
 end package MA_stage;
@@ -38,9 +36,7 @@ port (stall : in std_logic;
 		data_in : in std_logic_vector(16*8-1 downto 0);
 		data_out : out std_logic_vector(16*8-1 downto 0);
 		wb_in : in std_logic_vector(2 downto 0);
-		wb_enable : in std_logic;
-		pc_in : in std_logic_vector(15 downto 0);
-		pc_next : out std_logic_vector(15 downto 0)
+		wb_enable : in std_logic
 		); 
 end entity Mem_Access;
 
@@ -64,7 +60,6 @@ begin
 						data_memory(I) <= data_in((I*16+15) downto (I*16));
 					end loop;
 				end if;
-				pc_next <= pc_in;
 			end if;
 		end if;
 	end process;
