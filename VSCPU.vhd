@@ -40,7 +40,7 @@ begin
 address <= addr when (write_flag = '1') else pc_fet; 
 Inst_Mem : memory port map (clk , address , data , readWrite_I , inst_f);
 
-stage1 : Inst_Fetch port map (stall, clk, pc, pc_fet);
+stage1 : Inst_Fetch port map (stall => stall,clk => clk,pc => pc,pc_out => pc_fet);
 
 stage2 : Inst_Decode port map (stall, pc_fet, clk, inst_f, 
 							op_dec, r_a_dec, r_b_dec, r_c_dec , 
