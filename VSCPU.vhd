@@ -42,18 +42,18 @@ Inst_Mem : memory port map (clk , address , data , readWrite_I , inst_f);
 
 stage1 : Inst_Fetch port map (stall => stall,clk => clk,pc => pc,pc_out => pc_fet);
 
-stage2 : Inst_Decode port map (stall, pc_fet, clk, inst_f, 
-							op_dec, r_a_dec, r_b_dec, r_c_dec , 
-							en_b, en_c, imm_dec, cz_dec, pc_dec_out);
+stage2 : Inst_Decode port map (stall => stall,pc => pc_fet,clk => clk,inst => inst_f, 
+							op_code => op_dec,r_a => r_a_dec,r_b => r_b_dec,r_c => r_c_dec , 
+							enable_b => en_b,enable_c => en_c,imm => imm_dec,cz => cz_dec,pc_out => pc_dec_out);
 							
-stage3 : register_read port map (stall,clk, pc_dec_out, r_a_dec, r_b_dec,
-							r_c_dec, imm_dec, op_dec, cz_dec,
-							data_a_ra,data_b_ra,data_c_ra,cz_ra,r_co,op_ra,pc_ra
+stage3 : register_read port map (stall => stall,clk=>clk,pc => pc_dec_out,r_a => r_a_dec,r_b => r_b_dec,
+							r_c => r_c_dec,imm => imm_dec,op_code => op_dec,cz=> cz_dec,
+							data_a => data_a_ra, data_b => data_b_ra,data_c => data_c_ra,cz_out => cz_ra,r_co => r_co,op_out => op_ra,pc_out => pc_ra
 							);
 		
-stage4 : Execute port map (stall, clk,
-							pc_ra, op_ra, cz_ra,r_co,
-							data_a_ra,data_b_ra,data_c_ra,
-							data_out_alu,wb_out_alu,wb_enable,
-							pc);
+stage4 : Execute port map (stall=> stall,clk=> clk,
+							pc=>pc_ra,op_code=> op_ra,cz=> cz_ra,wb_in=>r_co,
+							data_a => data_a_ra, data_b => data_b_ra,data_c => data_c_ra,
+							data_out=> data_out_alu,wb_out=> wb_out_alu,wb_enable=> wb_enable,
+							pc_next=>pc);
 end architecture arch;
