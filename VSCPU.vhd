@@ -38,6 +38,7 @@ signal imm_dec: std_logic_vector(8 downto 0);
 signal reg_upd_ra, reg_upd_alu: std_logic_vector(7 downto 0);
 signal data_5, mem_add_in_alu, mem_add_out_alu : std_logic_vector(15 downto 0);
 signal ma_data_out, data_ra, data_out_alu: std_logic_vector(127 downto 0);
+signal num_acc1, num_acc2: std_logic_vector(2 downto 0);
 
 begin
 
@@ -82,7 +83,9 @@ stage3 : register_read port map (stall_r => stall,
 							mem_address_out => mem_add_in_alu,
 							data_in_alu => data_out_alu(15 downto 0),
 							wb_in_alu => wb_out_alu,
-							reg_updates => reg_upd_ra
+							reg_updates => reg_upd_ra,
+							num_acc => num_acc1,
+							data_mem => ma_data_out
 							);
 		
 stage4 : Execute port map (stall=> stall,
@@ -99,7 +102,9 @@ stage4 : Execute port map (stall=> stall,
 							wb_out => wb_out_alu,
 							wb_enable => wb_enable,
 							pc_next =>pc_alu,
-							mem_add_out => mem_add_out_alu
+							mem_add_out => mem_add_out_alu,
+							num_acc_in => num_acc1,
+							num_acc_out => num_acc2
 							);
 							
 stage5 : Mem_Access port map (stall => stall, clk => clk,
@@ -109,6 +114,7 @@ stage5 : Mem_Access port map (stall => stall, clk => clk,
 							data_out => ma_data_out,
 							wb_in => wb_out_alu,
 							wb_enable => wb_enable,
-							reg_bits => reg_upd_alu
+							reg_bits => reg_upd_alu,
+							num_acc => num_acc2
 							);
 end architecture arch;

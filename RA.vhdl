@@ -28,7 +28,9 @@ port (stall_r : in std_logic;
 		mem_address_out : out std_logic_vector(15 downto 0);
 		data_in_alu : in std_logic_vector(15 downto 0) ;
 		wb_in_alu : in std_logic_vector(2 downto 0);
-		reg_updates : out std_logic_vector(7 downto 0)
+		reg_updates : out std_logic_vector(7 downto 0);
+		num_acc : out std_logic_vector(2 downto 0);
+		data_mem : in std_logic_vector(127 downto 0)
 		);
 end component register_read;
 end package RA_stage;
@@ -64,6 +66,7 @@ port (stall_r : in std_logic;
 		wb_in_alu : in std_logic_vector(2 downto 0);
 		reg_updates : out std_logic_vector(7 downto 0);
 		num_acc : out std_logic_vector(2 downto 0);
+		data_mem : in std_logic_vector(127 downto 0)
 		);
 end entity register_read;
 
@@ -184,7 +187,7 @@ begin
 			-- from memory as well
 				
 			data_out <= data_out_var;
-			num_acc <= num_acc_var;
+			num_acc <= std_logic_vector(to_unsigned(num_acc_var-1,3));
 			r_co <= r_co_var;
 			cz_out <= cz;
 			op_out <= op_code;
