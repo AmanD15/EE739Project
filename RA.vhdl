@@ -62,8 +62,7 @@ begin
 	process(clk)
 	variable temp_a : std_logic_vector(data_width-1 downto 0);
 	variable temp_b : std_logic_vector(data_width-1 downto 0);
-	variable data_a_var, data_b_var, data_c_var : std_logic_vector(data_width-1 downto 0);
-	variable r_co_var : std_logic_vector(2 downto 0) := r_c;
+	variable r_co_var : std_logic_vector(2 downto 0);
 	variable imm_o : std_logic_vector(data_width-1 downto 0);
 	begin
 	if (rising_edge(clk)) then
@@ -72,6 +71,7 @@ begin
 			temp_b := RFile(to_integer(unsigned(r_b)));
 			imm_o(15 downto 6) := (others => imm(5));
 			imm_o(5 downto 0) := imm(5 downto 0);
+			r_co_var := r_c;
 			case op_code is 
 				-- 9 bit imm zero pad or SW/LW
 				when "1001"|"1011"|"0101"|"0100" => imm_o := "0000000" & imm;
@@ -81,42 +81,39 @@ begin
 						
 			case op_code is 
 				when "0001"|"0010" => 
-					data_a_var := temp_a;
-					data_b_var := temp_b;
+					data_a <= temp_a;
+					data_b <= temp_b;
 				when "0000" =>
-					data_a_var := temp_a;
-					data_b_var := imm_o ;
+					data_a <= temp_a;
+					data_b <= imm_o ;
 					r_co_var := r_b;
 			    when "0011" =>
-			    	data_b_var := imm_o;
+			    	data_b <= imm_o;
 			    	r_co_var := r_a; 
 		    	when "0100" =>
-					data_a_var := temp_b;
-		    		data_b_var := imm_o;
+					data_a <= temp_b;
+		    		data_b <= imm_o;
 		    		r_co_var := r_a;
 				when "0101" =>
-					data_a_var := temp_b;
-		    		data_b_var := imm_o;
+					data_a <= temp_b;
+		    		data_b <= imm_o;
 		    		r_co_var := r_a;
 	    		when "1000" =>
-					data_a_var := temp_a;
-					data_b_var := temp_b;
-					data_c_var := imm_o;
+					data_a <= temp_a;
+					data_b <= temp_b;
+					data_c <= imm_o;
 				when "1001" =>
-	    			data_c_var := imm_o;
+	    			data_c <= imm_o;
 	    			r_co_var := r_a;
 	    		when "1010" =>
-	    			data_b_var := temp_b ;
+	    			data_b <= temp_b ;
 	    			r_co_var := r_a ;
 	    		when "1011" =>
-					data_a_var := temp_a;
-	    			data_b_var := imm_o;
+					data_a <= temp_a;
+	    			data_b <= imm_o;
 				when others => null;
 			end case;
 					
-			data_a <= data_a_var;
-			data_b <= data_b_var;
-			data_c <= data_c_var;
 			r_co <= r_co_var;
 			cz_out <= cz;
 			op_out <= op_code;

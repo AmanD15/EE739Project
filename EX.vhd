@@ -57,31 +57,31 @@ begin
 	variable data_add : std_logic_vector(16 downto 0);
 	variable data_add2 : std_logic_vector(15 downto 0);
 	variable data_nand : std_logic_vector(15 downto 0);
-	variable c_flag_var : std_logic := c_flag;
-	variable z_flag_var : std_logic := z_flag;
+	variable c_flag_var : std_logic;
+	variable z_flag_var : std_logic;
 	variable z_var1 : std_logic;
 	variable z_var2 : std_logic;
 	variable pc_var : std_logic_vector(15 downto 0);
-	variable wb_en : std_logic := '0';
-	variable data_out_var : std_logic_vector(15 downto 0);
-	
+	variable wb_en : std_logic;
+
 	begin
-	
-	pc_var := std_logic_vector(unsigned(pc) + to_unsigned(1,16));
-	data_add := std_logic_vector(unsigned('0'&data_a)+unsigned('0'&data_b));
-	data_add2 := std_logic_vector(unsigned(pc)+unsigned(data_c));
-	data_nand := (data_a nand data_b);
-	if (data_add = "0000000000000000") then z_var1 := '1'; else z_var1 := '0'; end if;
-	if (data_nand = "000000000000000") then z_var2 := '1'; else z_var2 := '0'; end if;
-	
-	if (rising_edge(clk)) then
-			if (stall='0') then
+		if (rising_edge(clk)) then
+			if (stall = '0') then
+				c_flag_var := c_flag;
+				z_flag_var := z_flag;
+				wb_en := '0';
+				pc_var := std_logic_vector(unsigned(pc) + to_unsigned(1,16));
+				data_add := std_logic_vector(unsigned('0'&data_a)+unsigned('0'&data_b));
+				data_add2 := std_logic_vector(unsigned(pc)+unsigned(data_c));
+				data_nand := (data_a nand data_b);
+				if (data_add = "0000000000000000") then z_var1 := '1'; else z_var1 := '0'; end if;
+				if (data_nand = "000000000000000") then z_var2 := '1'; else z_var2 := '0'; end if;
 								
 				case op_code is
 					-- add immediate
 					when "0000" =>
 						z_flag_var := z_var1;
-						data_out_var := data_add(15 downto 0);
+						data_out <= data_add(15 downto 0);
 						c_flag_var := data_add(16);
 						wb_en := '1';
 					
@@ -90,24 +90,24 @@ begin
 						when "00" => 
 							z_flag_var := z_var1;
 							c_flag_var := data_add(16);
-							data_out_var := data_add(15 downto 0);
+							data_out <= data_add(15 downto 0);
 							wb_en := '1';
 						when "01" => 
 							if (z_flag='1') then 
-								data_out_var := data_add(15 downto 0);
+								data_out <= data_add(15 downto 0);
 								z_flag_var := z_var1;
 								c_flag_var := data_add(16);
 								wb_en := '1';
 							end if;
 						when "10" =>
 							if (c_flag='1') then
-								data_out_var := data_add(15 downto 0);
+								data_out <= data_add(15 downto 0);
 								z_flag_var := z_var1;
 								c_flag_var := data_add(16);
 								wb_en := '1';
 							end if;
 						when "11" =>
-							data_out_var := data_add(15 downto 0);
+							data_out <= data_add(15 downto 0);
 							z_flag_var :=  z_var1;
 							c_flag_var := data_add(16);
 							wb_en := '1';
@@ -117,19 +117,19 @@ begin
 					-- nand
 					when "0010" =>
 						case cz is
-							when "00" => data_out_var := data_nand; z_flag_var := z_var2; wb_en := '1';
+							when "00" => data_out <= data_nand; z_flag_var := z_var2; wb_en := '1';
 							when "01" =>
-								if (z_flag='1') then data_out_var := data_nand; z_flag_var := z_var2; wb_en := '1'; end if;
+								if (z_flag='1') then data_out <= data_nand; z_flag_var := z_var2; wb_en := '1'; end if;
 							when "10" =>
-								if (c_flag='1') then data_out_var := data_nand; z_flag_var := z_var2; wb_en := '1'; end if;
+								if (c_flag='1') then data_out <= data_nand; z_flag_var := z_var2; wb_en := '1'; end if;
 							when others => null;
 						end case;
 						
 					--lhi
-					when "0011" => data_out_var := data_b; wb_en := '1';
+					when "0011" => data_out <= data_b; wb_en := '1';
 					
 					--lw , sw
-					when "0100" | "0101" => data_out_var := data_add(15 downto 0);
+					when "0100" | "0101" => data_out <= data_add(15 downto 0);
 					
 					--beq
 					when "1000" =>
@@ -138,10 +138,10 @@ begin
 						end if;
 					
 					-- jal
-					when "1001" => data_out_var := pc_var; pc_var := data_add2; wb_en := '1';
+					when "1001" => data_out <= pc_var; pc_var := data_add2; wb_en := '1';
 					
 					-- jlr
-					when "1010" => data_out_var := pc_var; pc_var := data_b; wb_en := '1';
+					when "1010" => data_out <= pc_var; pc_var := data_b; wb_en := '1';
 					
 					--jri
 					when "1011" =>	pc_var := data_add(15 downto 0);
@@ -150,7 +150,6 @@ begin
 				
 				pc_next <= pc_var;
 				wb_out <= wb_in;
-				data_out <= data_out_var;
 				z_flag <= z_flag_var;
 				c_flag <= c_flag_var;
 				wb_enable <= wb_en;
