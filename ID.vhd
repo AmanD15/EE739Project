@@ -14,8 +14,6 @@ port (stall : in std_logic;
 		r_a : out std_logic_vector(2 downto 0);
 		r_b : out std_logic_vector(2 downto 0);
 		r_c : out std_logic_vector(2 downto 0);
-		enable_b : out std_logic;
-		enable_c : out std_logic;
 		imm : out std_logic_vector(8 downto 0);
 		cz : out std_logic_vector(1 downto 0);
 		pc_out : out std_logic_vector(15 downto 0)

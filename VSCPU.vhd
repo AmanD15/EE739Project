@@ -26,52 +26,89 @@ end entity VSCPU;
 architecture arch of VSCPU is
 
 signal stall : std_logic := '0';
-signal address : std_logic_vector(addr_width-1 downto 0);
+signal address, add_5 : std_logic_vector(15 downto 0);
 signal readWrite_I : std_logic := '0';
-signal inst_f : std_logic_vector(data_width-1 downto 0);
-signal pc , pc_fet, pc_dec_out, pc_ra, pc_alu: std_logic_vector(addr_width-1 downto 0);
+signal inst_f : std_logic_vector(15 downto 0);
+signal pc , pc_fet, pc_dec_out, pc_ra, pc_alu: std_logic_vector(15 downto 0);
 signal op_dec, op_ra : std_logic_vector(3 downto 0);
-signal r_a_dec, r_b_dec, r_c_dec, r_co, addr_5, wb_out_alu, nI_ma, ma_sa : std_logic_vector(2 downto 0);
+signal r_a_dec, r_b_dec, r_c_dec, r_co, addr_5, wb_out_alu: std_logic_vector(2 downto 0);
 signal cz_dec, cz_ra : std_logic_vector(1 downto 0);
 signal en_b,en_c, enable_5, wb_enable, w_en_ma: std_logic;
 signal imm_dec: std_logic_vector(8 downto 0);
-signal data_a_ra, data_b_ra, data_c_ra, data_5, data_out_alu : std_logic_vector(15 downto 0);
-signal ma_data_in, ma_data_out : std_logic_vector(127 downto 0);
+signal reg_upd_ra, reg_upd_alu: std_logic_vector(7 downto 0);
+signal data_5, mem_add_in_alu, mem_add_out_alu : std_logic_vector(15 downto 0);
+signal ma_data_out, data_ra, data_out_alu: std_logic_vector(127 downto 0);
 
 begin
 
 address <= addr when (write_flag = '1') else pc_fet; 
 Inst_Mem : memory port map (clk , address , data , readWrite_I , inst_f);
 
-stage1 : Inst_Fetch port map (stall => stall,clk => clk,pc => pc,pc_out => pc_fet);
+stage1 : Inst_Fetch port map (stall => stall,
+							clk => clk,
+							pc => pc,
+							pc_out => pc_fet);
 
-stage2 : Inst_Decode port map (stall => stall,pc => pc_fet,clk => clk,inst => inst_f, 
+stage2 : Inst_Decode port map (stall => stall,
+							pc => pc_fet,
+							clk => clk,
+							inst => inst_f, 
 							op_code => op_dec,
-							r_a => r_a_dec,r_b => r_b_dec,r_c => r_c_dec , 
+							r_a => r_a_dec,
+							r_b => r_b_dec,
+							r_c => r_c_dec , 
 							imm => imm_dec,
-							cz => cz_dec,pc_out => pc_dec_out);
+							cz => cz_dec,
+							pc_out => pc_dec_out);
 							
-stage3 : register_read port map (stall => stall,clk=>clk,pc => pc_dec_out,
-							r_a => r_a_dec,r_b => r_b_dec,
-							r_c => r_c_dec,imm => imm_dec,
-							op_code => op_dec,cz=> cz_dec,
-							data_a => data_a_ra, data_b => data_b_ra,data_c => data_c_ra,
-							cz_out => cz_ra,r_co => r_co,op_out => op_ra,pc_out => pc_ra
+stage3 : register_read port map (stall_r => stall,
+							stall_w => stall,
+							clk=>clk,
+							pc => pc_dec_out,
+							r_a => r_a_dec,
+							r_b => r_b_dec,
+							r_c => r_c_dec,
+							imm => imm_dec,
+							op_code => op_dec,
+							cz=> cz_dec,
+							enable_5 => enable_5,
+							data_5 => data_5,
+							addr_5 => add_5,
+							data_out => data_ra,
+							cz_out => cz_ra,
+							r_co => r_co,
+							op_out => op_ra,
+							pc_out => pc_ra,
+							mem_address_out => mem_add_in_alu,
+							data_in_alu => data_out_alu(15 downto 0),
+							wb_in_alu => wb_out_alu,
+							reg_updates => reg_upd_ra
 							);
 		
-stage4 : Execute port map (stall=> stall,clk=> clk,
-							pc=>pc_ra,op_code=> op_ra,cz=> cz_ra,wb_in=>r_co,
-							data_a => data_a_ra, data_b => data_b_ra,data_c => data_c_ra,
-							data_out=> data_out_alu,wb_out=> wb_out_alu,wb_enable=> wb_enable,
-							pc_next=>pc_alu);
+stage4 : Execute port map (stall=> stall,
+							clk=> clk,
+							pc=>pc_ra,
+							op_code=> op_ra,
+							cz=> cz_ra,
+							wb_in =>r_co,
+							data_in => data_ra,
+							mem_address => mem_add_in_alu,
+							reg_bits => reg_upd_ra,
+							reg_bits_out => reg_upd_alu,
+							data_out => data_out_alu,
+							wb_out => wb_out_alu,
+							wb_enable => wb_enable,
+							pc_next =>pc_alu,
+							mem_add_out => mem_add_out_alu
+							);
 							
 stage5 : Mem_Access port map (stall => stall, clk => clk,
-		readWrite => w_en_ma,
-		start_address => data_out_alu,
-		num_inputs => nI_ma,
-		data_in => ma_data_in,
-		data_out => ma_data_out,
-		wb_in => wb_out_alu,
-		wb_enable => wb_enable
-		);
+							readWrite => w_en_ma,
+							start_address => mem_add_out_alu,
+							data_in => data_out_alu,
+							data_out => ma_data_out,
+							wb_in => wb_out_alu,
+							wb_enable => wb_enable,
+							reg_bits => reg_upd_alu
+							);
 end architecture arch;

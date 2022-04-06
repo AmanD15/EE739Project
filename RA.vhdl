@@ -20,15 +20,15 @@ port (stall_r : in std_logic;
 		enable_5 : in std_logic ;
 		data_5 : in std_logic_vector(data_width-1 downto 0);
 		addr_5 : in std_logic_vector(data_width-1 downto 0);
-		data_a : out std_logic_vector(data_width-1 downto 0);
-		data_b : out std_logic_vector(data_width-1 downto 0);
-		data_c : out std_logic_vector(data_width-1 downto 0);
+		data_out : out std_logic_vector(127 downto 0);
 		cz_out : out std_logic_vector(1 downto 0);		
 		r_co : out std_logic_vector(2 downto 0);
 		op_out : out std_logic_vector(3 downto 0);
-		pc_out : out std_logic_vector(15 downto 0)
-		data_out : in std_logic_vector(15 downto 0) ;
-		wb_out : in std_logic_vector(2 downto 0);
+		pc_out : out std_logic_vector(15 downto 0);
+		mem_address_out : out std_logic_vector(15 downto 0);
+		data_in_alu : in std_logic_vector(15 downto 0) ;
+		wb_in_alu : in std_logic_vector(2 downto 0);
+		reg_updates : out std_logic_vector(7 downto 0)
 		);
 end component register_read;
 end package RA_stage;
@@ -54,15 +54,16 @@ port (stall_r : in std_logic;
 		enable_5 : in std_logic ;
 		data_5 : in std_logic_vector(data_width-1 downto 0);
 		addr_5 : in std_logic_vector(data_width-1 downto 0);
-		data_a : out std_logic_vector(15 downto 0);
-		data_b : out std_logic_vector(15 downto 0);
-		data_c : out std_logic_vector(15 downto 0);
+		data_out : out std_logic_vector(127 downto 0);
 		cz_out : out std_logic_vector(1 downto 0);		
 		r_co : out std_logic_vector(2 downto 0);
 		op_out : out std_logic_vector(3 downto 0);
-		pc_out : out std_logic_vector(15 downto 0)
-		data_out : in std_logic_vector(15 downto 0) ;
-		wb_out : in std_logic_vector(2 downto 0);
+		pc_out : out std_logic_vector(15 downto 0);
+		mem_address_out : out std_logic_vector(15 downto 0);
+		data_in_alu : in std_logic_vector(15 downto 0) ;
+		wb_in_alu : in std_logic_vector(2 downto 0);
+		reg_updates : out std_logic_vector(7 downto 0);
+		num_acc : out std_logic_vector(2 downto 0);
 		);
 end entity register_read;
 
@@ -74,9 +75,10 @@ begin
 	process(clk)
 	variable temp_a : std_logic_vector(data_width-1 downto 0);
 	variable temp_b : std_logic_vector(data_width-1 downto 0);
-	variable data_a_var, data_b_var, data_c_var : std_logic_vector(data_width-1 downto 0);
+	variable data_out_var : std_logic_vector(127 downto 0);
 	variable r_co_var : std_logic_vector(2 downto 0) := r_c;
 	variable imm_o : std_logic_vector(data_width-1 downto 0);
+	variable num_acc_var : integer;
 	begin
 	if (rising_edge(clk)) then
 		if(stall_w = '0') then 
@@ -85,6 +87,7 @@ begin
 			end if;
 		end if;
 		if (stall_r = '0') then
+			num_acc_var := 0;
 			temp_a := RFile(to_integer(unsigned(r_a)));
 			temp_b := RFile(to_integer(unsigned(r_b)));
 			imm_o(15 downto 6) := (others => imm(5));
@@ -97,53 +100,91 @@ begin
 			end case;
 						
 			case op_code is 
+				-- add/nand
 				when "0001"|"0010" => 
-					data_a_var := temp_a;
-					data_b_var := temp_b;
+					data_out_var(15 downto 0) := temp_a;
+					data_out_var(31 downto 16) := temp_b;
+				
+				-- addi
 				when "0000" =>
-					data_a_var := temp_a;
-					data_b_var := imm_o ;
+					data_out_var(15 downto 0) := temp_a;
+					data_out_var(31 downto 16) := imm_o ;
 					r_co_var := r_b;
-			    when "0011" =>
-			    	data_b_var := imm_o;
+			   
+				-- lhi
+				when "0011" =>
+			    	data_out_var(31 downto 16) := imm_o;
 			    	r_co_var := r_a; 
-		    	when "0100" =>
-					data_a_var := temp_b;
-		    		data_b_var := imm_o;
+		    	
+				-- lw,sw
+				when "0100" | "0101" =>
+					data_out_var(15 downto 0) := temp_b;
+		    		data_out_var(31 downto 16) := imm_o;
 		    		r_co_var := r_a;
-				when "0101" =>
-					data_a_var := temp_b;
-		    		data_b_var := imm_o;
-		    		r_co_var := r_a;
+				
+				-- beq
 	    		when "1000" =>
-					data_a_var := temp_a;
-					data_b_var := temp_b;
-					data_c_var := imm_o;
+					data_out_var(15 downto 0) := temp_a;
+					data_out_var(31 downto 16) := temp_b;
+					data_out_var(47 downto 32) := imm_o;
+				
+				-- jal
 				when "1001" =>
-	    			data_c_var := imm_o;
+	    			data_out_var(47 downto 32) := imm_o;
 	    			r_co_var := r_a;
-	    		when "1010" =>
-	    			data_b_var := temp_b ;
+	    		
+				-- jlr
+				when "1010" =>
+	    			data_out_var(31 downto 16) := temp_b ;
 	    			r_co_var := r_a ;
-	    		when "1011" =>
-					data_a_var := temp_a;
-	    			data_b_var := imm_o;
+	    		
+				-- jri
+				when "1011" =>
+					data_out_var(15 downto 0) := temp_a;
+	    			data_out_var(31 downto 16) := imm_o;
+				
+				-- lm
+				when "1100" =>
+				mem_address_out <= temp_a;
+				reg_updates <= imm(7 downto 0);
+				
+				-- sm
+				when "1101" =>
+					mem_address_out <= temp_a;
+					reg_updates <= imm(7 downto 0);
+					for i in 7 downto 0 loop
+						if (imm(7-i) = '1') then
+							data_out_var(num_acc_var*16+15 downto num_acc_var*16) := RFile(i);
+							num_acc_var := num_acc_var + 1;
+						end if;
+					end loop;
+				
+				-- la
+				when "1110" =>
+				mem_address_out <= temp_a;
+				reg_updates <= "11111111";
+				
+				-- sa
+				when "1111" =>
+				mem_address_out <= temp_a;
+				reg_updates <= "11111111";
+				data_out_var := (RFile(7) & RFile(6) & RFile(5) & RFile(4) & RFile(3) & RFile(2) & RFile(1) & RFile(0));
+				num_acc_var := 7;
+				
 				when others => null;
 			end case;
 			
-			
-			if (r_a = wb_out) then
-				data_a_var := data_out;
+			-- forwarding from alu
+			if (r_a = wb_in_alu) then
+				data_out_var(15 downto 0) := data_in_alu;
 			end if;
-			if (r_b = wb_out) then
-				data_b_var := data_out;
+			if (r_b = wb_in_alu) then
+				data_out_var(31 downto 16) := data_in_alu;
 			end if;				
 			-- from memory as well
 				
-			
-			data_a <= data_a_var;
-			data_b <= data_b_var;
-			data_c <= data_c_var;
+			data_out <= data_out_var;
+			num_acc <= num_acc_var;
 			r_co <= r_co_var;
 			cz_out <= cz;
 			op_out <= op_code;

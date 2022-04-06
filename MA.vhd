@@ -11,11 +11,11 @@ port (stall : in std_logic;
 		-- 1 denotes write
 		readWrite : in std_logic;
 		start_address : in std_logic_vector(15 downto 0);
-		num_inputs : in std_logic_vector(2 downto 0);
-		data_in : in std_logic_vector(16*8-1 downto 0);
-		data_out : out std_logic_vector(16*8-1 downto 0);
+		data_in : in std_logic_vector(127 downto 0);
+		data_out : out std_logic_vector(127 downto 0);
 		wb_in : in std_logic_vector(2 downto 0);
-		wb_enable : in std_logic
+		wb_enable : in std_logic;
+		reg_bits : in std_logic_vector(0 to 7)
 		); 
 end component Mem_Access;
 end package MA_stage;
@@ -32,11 +32,11 @@ port (stall : in std_logic;
 		-- 1 denotes write
 		readWrite : in std_logic;
 		start_address : in std_logic_vector(15 downto 0);
-		num_inputs : in std_logic_vector(2 downto 0);
-		data_in : in std_logic_vector(16*8-1 downto 0);
-		data_out : out std_logic_vector(16*8-1 downto 0);
+		data_in : in std_logic_vector(127 downto 0);
+		data_out : out std_logic_vector(127 downto 0);
 		wb_in : in std_logic_vector(2 downto 0);
-		wb_enable : in std_logic
+		wb_enable : in std_logic;
+		reg_bits : in std_logic_vector(0 to 7)
 		); 
 end entity Mem_Access;
 
@@ -45,21 +45,23 @@ type my_mem is array(0 to 1023) of std_logic_vector(15 downto 0);
 signal data_memory : my_mem;
 begin
 	process(clk)
-	variable num_acc : integer := to_integer(unsigned(num_inputs));
-	variable start : integer := to_integer(unsigned(start_address));
-	variable last : integer := start + num_acc+1;
+	variable start : integer;
+	variable J : integer;
 	begin
+		start := to_integer(unsigned(start_address));
+		J := 0;
 		if (rising_edge(clk)) then
 			if (stall = '0') then
-				if (readWrite = '1') then
-					for I in 0 to 7 loop
-						data_out((I*16+15) downto (I*16)) <= data_memory(I);
-					end loop;
-				else
-					for I in 0 to 7 loop
-						data_memory(I) <= data_in((I*16+15) downto (I*16));
-					end loop;
-				end if;
+				for I in 0 to 7 loop
+					if (reg_bits(I) = '1') then
+						if (readWrite = '1') then
+							data_out((J*16+15) downto (J*16)) <= data_memory(start+J);
+						else
+							data_memory(start+J) <= data_in((J*16+15) downto (J*16));
+						end if;
+						J := J + 1;
+					end if;
+				end loop;
 			end if;
 		end if;
 	end process;
