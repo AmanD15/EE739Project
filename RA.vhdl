@@ -17,20 +17,24 @@ port (stall_r : in std_logic;
 		imm : in std_logic_vector(8 downto 0);
 		op_code : in std_logic_vector(3 downto 0);
 		cz : in std_logic_vector(1 downto 0);
-		enable_5 : in std_logic ;
-		data_5 : in std_logic_vector(data_width-1 downto 0);
-		addr_5 : in std_logic_vector(data_width-1 downto 0);
+		data_mem : in std_logic_vector(127 downto 0);
 		data_out : out std_logic_vector(127 downto 0);
 		cz_out : out std_logic_vector(1 downto 0);		
 		r_co : out std_logic_vector(2 downto 0);
 		op_out : out std_logic_vector(3 downto 0);
 		pc_out : out std_logic_vector(15 downto 0);
 		mem_address_out : out std_logic_vector(15 downto 0);
+		reg_updates : out std_logic_vector(7 downto 0);
+		mem_updates : out std_logic_vector(7 downto 0);
+		
+		--forwarding
 		data_in_alu : in std_logic_vector(15 downto 0) ;
 		wb_in_alu : in std_logic_vector(2 downto 0);
-		reg_updates : out std_logic_vector(7 downto 0);
-		num_acc : out std_logic_vector(2 downto 0);
-		data_mem : in std_logic_vector(127 downto 0)
+		
+		-- write_back
+		enable_5 : in std_logic ;
+		data_5 : in std_logic_vector(data_width-1 downto 0);
+		addr_5 : in std_logic_vector(data_width-1 downto 0)
 		);
 end component register_read;
 end package RA_stage;
@@ -56,17 +60,17 @@ port (stall_r : in std_logic;
 		enable_5 : in std_logic ;
 		data_5 : in std_logic_vector(data_width-1 downto 0);
 		addr_5 : in std_logic_vector(data_width-1 downto 0);
+		data_in_alu : in std_logic_vector(15 downto 0) ;
+		wb_in_alu : in std_logic_vector(2 downto 0);
+		data_mem : in std_logic_vector(127 downto 0);
 		data_out : out std_logic_vector(127 downto 0);
 		cz_out : out std_logic_vector(1 downto 0);		
 		r_co : out std_logic_vector(2 downto 0);
 		op_out : out std_logic_vector(3 downto 0);
 		pc_out : out std_logic_vector(15 downto 0);
 		mem_address_out : out std_logic_vector(15 downto 0);
-		data_in_alu : in std_logic_vector(15 downto 0) ;
-		wb_in_alu : in std_logic_vector(2 downto 0);
 		reg_updates : out std_logic_vector(7 downto 0);
-		num_acc : out std_logic_vector(2 downto 0);
-		data_mem : in std_logic_vector(127 downto 0)
+		mem_updates : out std_logic_vector(7 downto 0)
 		);
 end entity register_read;
 
@@ -79,9 +83,10 @@ begin
 	variable temp_a : std_logic_vector(data_width-1 downto 0);
 	variable temp_b : std_logic_vector(data_width-1 downto 0);
 	variable data_out_var : std_logic_vector(127 downto 0);
-	variable r_co_var : std_logic_vector(2 downto 0) := r_c;
+	variable r_co_var : std_logic_vector(2 downto 0);
 	variable imm_o : std_logic_vector(data_width-1 downto 0);
 	variable num_acc_var : integer;
+	variable mem_updates_var : std_logic_vector(7 downto 0);
 	begin
 	if (rising_edge(clk)) then
 		if(stall_w = '0') then 
@@ -95,6 +100,8 @@ begin
 			temp_b := RFile(to_integer(unsigned(r_b)));
 			imm_o(15 downto 6) := (others => imm(5));
 			imm_o(5 downto 0) := imm(5 downto 0);
+			r_co_var := r_c;
+			mem_updates_var := "00000000";
 			case op_code is 
 				-- 9 bit imm zero pad or SW/LW
 				when "1001"|"1011"|"0101"|"0100" => imm_o := "0000000" & imm;
@@ -119,12 +126,18 @@ begin
 			    	data_out_var(31 downto 16) := imm_o;
 			    	r_co_var := r_a; 
 		    	
-				-- lw,sw
-				when "0100" | "0101" =>
+				-- lw
+				when "0100" =>
 					data_out_var(15 downto 0) := temp_b;
 		    		data_out_var(31 downto 16) := imm_o;
 		    		r_co_var := r_a;
 				
+				-- sw
+				when "0101" =>
+					data_out_var(15 downto 0) := temp_b;
+		    		data_out_var(31 downto 16) := imm_o;
+		    		data_out_var(47 downto 32) := temp_a;
+					
 				-- beq
 	    		when "1000" =>
 					data_out_var(15 downto 0) := temp_a;
@@ -150,6 +163,12 @@ begin
 				when "1100" =>
 				mem_address_out <= temp_a;
 				reg_updates <= imm(7 downto 0);
+				for i in 7 downto 0 loop
+					if (imm(7-i) = '1') then
+						mem_updates_var(num_acc_var) := '1';
+						num_acc_var := num_acc_var + 1;
+					end if;
+				end loop;
 				
 				-- sm
 				when "1101" =>
@@ -159,6 +178,7 @@ begin
 						if (imm(7-i) = '1') then
 							data_out_var(num_acc_var*16+15 downto num_acc_var*16) := RFile(i);
 							num_acc_var := num_acc_var + 1;
+							mem_updates_var(num_acc_var) := '1';
 						end if;
 					end loop;
 				
@@ -187,11 +207,11 @@ begin
 			-- from memory as well
 				
 			data_out <= data_out_var;
-			num_acc <= std_logic_vector(to_unsigned(num_acc_var-1,3));
 			r_co <= r_co_var;
 			cz_out <= cz;
 			op_out <= op_code;
 			pc_out <= pc;
+			mem_updates <= mem_updates_var;
 		end if;
 	end if ;
 	end process;

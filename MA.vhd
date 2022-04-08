@@ -15,8 +15,8 @@ port (stall : in std_logic;
 		data_out : out std_logic_vector(127 downto 0);
 		wb_in : in std_logic_vector(2 downto 0);
 		wb_enable : in std_logic;
-		reg_bits : in std_logic_vector(0 to 7);
-		num_acc : in std_logic_vector(2 downto 0)
+		reg_bits : in std_logic_vector(7 downto 0);
+		mem_bits : in std_logic_vector(7 downto 0)
 		); 
 end component Mem_Access;
 end package MA_stage;
@@ -37,28 +37,23 @@ port (stall : in std_logic;
 		data_out : out std_logic_vector(127 downto 0);
 		wb_in : in std_logic_vector(2 downto 0);
 		wb_enable : in std_logic;
-		reg_bits : in std_logic_vector(0 to 7);
-		num_acc : in std_logic_vector(2 downto 0)
+		reg_bits : in std_logic_vector(7 downto 0);
+		mem_bits : in std_logic_vector(7 downto 0)
 		); 
 end entity Mem_Access;
 
 architecture Mem_Arch of Mem_Access is
-type my_mem is array(1023 downto 0) of std_logic_vector(15 downto 0);
-signal data_memory : my_mem;
 begin
+	Data_Mem : memory_8_port port map (clk => clk, addr => start_address,
+							data => data_in,
+							readWrite => mem_bits,
+							output => data_out,
+							loadStore => '1'
+							);
 	process(clk)
-	variable start : integer;
-	variable num : integer;
 	begin
-		start := to_integer(unsigned(start_address));
-		num := to_integer(unsigned(num_acc));
 		if (rising_edge(clk)) then
 			if (stall = '0') then
-				if (readWrite = '1') then
-					data_memory((start+num) downto start) <= data_in(num*16+15 downto 0);
-				else
-					data_out((num*16+15) downto 0) <= data_memory((start+num) downto start);
-				end if;
 			end if;
 		end if;
 	end process;

@@ -16,14 +16,14 @@ port (stall : in std_logic;
 		data_in : in std_logic_vector(127 downto 0);
 		mem_address : in std_logic_vector(15 downto 0);
 		reg_bits : in std_logic_vector(7 downto 0);
+		mem_bits : in std_logic_vector(7 downto 0);
 		reg_bits_out : out std_logic_vector(7 downto 0);
+		mem_bits_out : out std_logic_vector(7 downto 0);
 		data_out : out std_logic_vector(127 downto 0);
 		wb_out : out std_logic_vector(2 downto 0);
 		wb_enable : out std_logic;
 		pc_next : out std_logic_vector(15 downto 0);
-		mem_add_out : out std_logic_vector(15 downto 0);
-		num_acc_in : in std_logic_vector(2 downto 0);
-		num_acc_out : out std_logic_vector(2 downto 0)
+		mem_add_out : out std_logic_vector(15 downto 0)
 		);
 end component Execute;
 end package EX_stage;
@@ -45,14 +45,14 @@ port (stall : in std_logic;
 		data_in : in std_logic_vector(127 downto 0);
 		mem_address : in std_logic_vector(15 downto 0);
 		reg_bits : in std_logic_vector(7 downto 0);
+		mem_bits : in std_logic_vector(7 downto 0);
 		reg_bits_out : out std_logic_vector(7 downto 0);
+		mem_bits_out : out std_logic_vector(7 downto 0);
 		data_out : out std_logic_vector(127 downto 0);
 		wb_out : out std_logic_vector(2 downto 0);
 		wb_enable : out std_logic;
 		pc_next : out std_logic_vector(15 downto 0);
-		mem_add_out : out std_logic_vector(15 downto 0);
-		num_acc_in : in std_logic_vector(2 downto 0);
-		num_acc_out : out std_logic_vector(2 downto 0)
+		mem_add_out : out std_logic_vector(15 downto 0)
 		);
 end entity Execute;
 
@@ -143,7 +143,7 @@ begin
 					when "0011" => data_out_var(15 downto 0)  := data_b; wb_en := '1';
 					
 					--lw , sw
-					when "0100" | "0101" => mem_add_out <= data_add(15 downto 0);
+					when "0100" | "0101" => mem_add_out <= data_add(15 downto 0); data_out_var(15 downto 0) := data_c;
 					
 					-- sm, lm, la, sa
 					when "1100" | "1101" | "1110" | "1111" => 
@@ -173,7 +173,8 @@ begin
 				c_flag <= c_flag_var;
 				wb_enable <= wb_en;
 				data_out <= data_out_var;
-				num_acc_out <= num_acc_in;
+				mem_bits_out <= mem_bits;
+				reg_bits_out <= reg_bits;
 			end if;
 		end if;
 	end process;
