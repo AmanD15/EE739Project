@@ -26,6 +26,7 @@ port (stall_r : in std_logic;
 		mem_address_out : out std_logic_vector(15 downto 0);
 		reg_updates : out std_logic_vector(7 downto 0);
 		mem_updates : out std_logic_vector(7 downto 0);
+		mem_sr : out std_logic;
 		
 		--forwarding
 		data_in_alu : in std_logic_vector(15 downto 0) ;
@@ -57,11 +58,6 @@ port (stall_r : in std_logic;
 		imm : in std_logic_vector(8 downto 0);
 		op_code : in std_logic_vector(3 downto 0);
 		cz : in std_logic_vector(1 downto 0);
-		enable_5 : in std_logic ;
-		data_5 : in std_logic_vector(data_width-1 downto 0);
-		addr_5 : in std_logic_vector(data_width-1 downto 0);
-		data_in_alu : in std_logic_vector(15 downto 0) ;
-		wb_in_alu : in std_logic_vector(2 downto 0);
 		data_mem : in std_logic_vector(127 downto 0);
 		data_out : out std_logic_vector(127 downto 0);
 		cz_out : out std_logic_vector(1 downto 0);		
@@ -70,7 +66,17 @@ port (stall_r : in std_logic;
 		pc_out : out std_logic_vector(15 downto 0);
 		mem_address_out : out std_logic_vector(15 downto 0);
 		reg_updates : out std_logic_vector(7 downto 0);
-		mem_updates : out std_logic_vector(7 downto 0)
+		mem_updates : out std_logic_vector(7 downto 0);
+		mem_sr : out std_logic;
+		
+		--forwarding
+		data_in_alu : in std_logic_vector(15 downto 0) ;
+		wb_in_alu : in std_logic_vector(2 downto 0);
+		
+		-- write_back
+		enable_5 : in std_logic ;
+		data_5 : in std_logic_vector(data_width-1 downto 0);
+		addr_5 : in std_logic_vector(data_width-1 downto 0)
 		);
 end entity register_read;
 
@@ -87,6 +93,7 @@ begin
 	variable imm_o : std_logic_vector(data_width-1 downto 0);
 	variable num_acc_var : integer;
 	variable mem_updates_var : std_logic_vector(7 downto 0);
+	variable mem_sr_var : std_logic;
 	begin
 	if (rising_edge(clk)) then
 		if(stall_w = '0') then 
@@ -102,6 +109,7 @@ begin
 			imm_o(5 downto 0) := imm(5 downto 0);
 			r_co_var := r_c;
 			mem_updates_var := "00000000";
+			mem_sr_var := '0';
 			case op_code is 
 				-- 9 bit imm zero pad or SW/LW
 				when "1001"|"1011"|"0101"|"0100" => imm_o := "0000000" & imm;
@@ -137,6 +145,7 @@ begin
 					data_out_var(15 downto 0) := temp_b;
 		    		data_out_var(31 downto 16) := imm_o;
 		    		data_out_var(47 downto 32) := temp_a;
+					mem_sr_var := '1';
 					
 				-- beq
 	    		when "1000" =>
@@ -174,6 +183,7 @@ begin
 				when "1101" =>
 					mem_address_out <= temp_a;
 					reg_updates <= imm(7 downto 0);
+					mem_sr_var := '1';
 					for i in 7 downto 0 loop
 						if (imm(7-i) = '1') then
 							data_out_var(num_acc_var*16+15 downto num_acc_var*16) := RFile(i);
@@ -185,14 +195,16 @@ begin
 				-- la
 				when "1110" =>
 				mem_address_out <= temp_a;
-				reg_updates <= "11111111";
+				reg_updates <= "11111110";
+				mem_updates_var := "01111111";
 				
 				-- sa
 				when "1111" =>
 				mem_address_out <= temp_a;
-				reg_updates <= "11111111";
-				data_out_var := (RFile(7) & RFile(6) & RFile(5) & RFile(4) & RFile(3) & RFile(2) & RFile(1) & RFile(0));
-				num_acc_var := 7;
+				reg_updates <= "11111110";
+				mem_updates_var := "01111111";
+				mem_sr_var := '1';
+				data_out_var := ("0000000000000000" & RFile(6) & RFile(5) & RFile(4) & RFile(3) & RFile(2) & RFile(1) & RFile(0));
 				
 				when others => null;
 			end case;
@@ -212,6 +224,7 @@ begin
 			op_out <= op_code;
 			pc_out <= pc;
 			mem_updates <= mem_updates_var;
+			mem_sr <= mem_sr_var;
 		end if;
 	end if ;
 	end process;

@@ -23,7 +23,9 @@ port (stall : in std_logic;
 		wb_out : out std_logic_vector(2 downto 0);
 		wb_enable : out std_logic;
 		pc_next : out std_logic_vector(15 downto 0);
-		mem_add_out : out std_logic_vector(15 downto 0)
+		mem_add_out : out std_logic_vector(15 downto 0);
+		mem_sr : in std_logic;
+		mem_sr_out : out std_logic
 		);
 end component Execute;
 end package EX_stage;
@@ -52,7 +54,9 @@ port (stall : in std_logic;
 		wb_out : out std_logic_vector(2 downto 0);
 		wb_enable : out std_logic;
 		pc_next : out std_logic_vector(15 downto 0);
-		mem_add_out : out std_logic_vector(15 downto 0)
+		mem_add_out : out std_logic_vector(15 downto 0);
+		mem_sr : in std_logic;
+		mem_sr_out : out std_logic
 		);
 end entity Execute;
 
@@ -143,8 +147,10 @@ begin
 					when "0011" => data_out_var(15 downto 0)  := data_b; wb_en := '1';
 					
 					--lw , sw
-					when "0100" | "0101" => mem_add_out <= data_add(15 downto 0); data_out_var(15 downto 0) := data_c;
-					
+					when "0100" | "0101" =>
+						mem_add_out <= data_add(15 downto 0);
+						data_out_var(15 downto 0) := data_c;
+											
 					-- sm, lm, la, sa
 					when "1100" | "1101" | "1110" | "1111" => 
 						mem_add_out <= mem_address;
@@ -175,6 +181,7 @@ begin
 				data_out <= data_out_var;
 				mem_bits_out <= mem_bits;
 				reg_bits_out <= reg_bits;
+				mem_sr_out <= mem_sr;
 			end if;
 		end if;
 	end process;
