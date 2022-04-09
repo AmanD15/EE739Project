@@ -35,7 +35,8 @@ port (stall_r : in std_logic;
 		-- write_back
 		enable_5 : in std_logic ;
 		data_5 : in std_logic_vector(data_width-1 downto 0);
-		addr_5 : in std_logic_vector(data_width-1 downto 0)
+		addr_5 : in std_logic_vector(2 downto 0);
+		mem_addr_5 : in std_logic_vector(7 downto 0)
 		);
 end component register_read;
 end package RA_stage;
@@ -76,7 +77,8 @@ port (stall_r : in std_logic;
 		-- write_back
 		enable_5 : in std_logic ;
 		data_5 : in std_logic_vector(data_width-1 downto 0);
-		addr_5 : in std_logic_vector(data_width-1 downto 0)
+		addr_5 : in std_logic_vector(2 downto 0);
+		mem_addr_5 : in std_logic_vector(7 downto 0)
 		);
 end entity register_read;
 
