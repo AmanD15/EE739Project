@@ -146,7 +146,7 @@ begin
 				when others => null;
 			end case;
 			
-			if wb_enbl_mem then
+			if (wb_enbl_mem ='1') then
 				if (r_a = wb_in_mem) then 
 					temp_a := data_in_mem;
 				end if;
@@ -156,7 +156,7 @@ begin
 			end if;
 						
 			-- forwarding from alu
-			if wb_enbl_alu then
+			if (wb_enbl_alu = '1') then
 				if (r_a = wb_in_alu) then 
 					temp_a := data_in_alu;
 				end if;
