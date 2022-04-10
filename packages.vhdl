@@ -100,15 +100,17 @@ begin
 		a(6) := data(111 downto 96);
 		a(7) := data(127 downto 112);
 		if (falling_edge(clk)) then
-			if (loadStore = '1') then
-				if (readWrite(0) = '1') then storage(to_integer(unsigned(addr))) <= a(0);
-					if (readWrite(1) = '1') then storage(to_integer(unsigned(addr)+1)) <= a(1);
-						if (readWrite(2) = '1') then storage(to_integer(unsigned(addr)+2)) <= a(2);
-							if (readWrite(3) = '1') then storage(to_integer(unsigned(addr)+3)) <= a(3);
-								if (readWrite(4) = '1') then storage(to_integer(unsigned(addr)+4)) <= a(4);
-									if (readWrite(5) = '1') then storage(to_integer(unsigned(addr)+5)) <= a(5);
-										if (readWrite(6) = '1') then storage(to_integer(unsigned(addr)+6)) <= a(6);
-											if (readWrite(7) = '1') then storage(to_integer(unsigned(addr)+7)) <= a(7);
+			if (readWrite /= "00000000") then
+				if (loadStore = '1') then
+					if (readWrite(0) = '1') then storage(to_integer(unsigned(addr))) <= a(0);
+						if (readWrite(1) = '1') then storage(to_integer(unsigned(addr)+1)) <= a(1);
+							if (readWrite(2) = '1') then storage(to_integer(unsigned(addr)+2)) <= a(2);
+								if (readWrite(3) = '1') then storage(to_integer(unsigned(addr)+3)) <= a(3);
+									if (readWrite(4) = '1') then storage(to_integer(unsigned(addr)+4)) <= a(4);
+										if (readWrite(5) = '1') then storage(to_integer(unsigned(addr)+5)) <= a(5);
+											if (readWrite(6) = '1') then storage(to_integer(unsigned(addr)+6)) <= a(6);
+												if (readWrite(7) = '1') then storage(to_integer(unsigned(addr)+7)) <= a(7);
+												end if;
 											end if;
 										end if;
 									end if;
@@ -116,16 +118,16 @@ begin
 							end if;
 						end if;
 					end if;
+				else
+					output(15 downto 0) <= storage(to_integer(unsigned(addr)));
+					output(31 downto 16) <= storage(to_integer(unsigned(addr)+1));
+					output(47 downto 32) <= storage(to_integer(unsigned(addr)+2));
+					output(63 downto 48) <= storage(to_integer(unsigned(addr)+3));
+					output(79 downto 64) <= storage(to_integer(unsigned(addr)+4));
+					output(95 downto 80) <= storage(to_integer(unsigned(addr)+5));
+					output(111 downto 96) <= storage(to_integer(unsigned(addr)+6));
+					output(127 downto 112) <= storage(to_integer(unsigned(addr)+7));
 				end if;
-			else
-				output(15 downto 0) <= storage(to_integer(unsigned(addr)));
-				output(31 downto 16) <= storage(to_integer(unsigned(addr)+1));
-				output(47 downto 32) <= storage(to_integer(unsigned(addr)+2));
-				output(63 downto 48) <= storage(to_integer(unsigned(addr)+3));
-				output(79 downto 64) <= storage(to_integer(unsigned(addr)+4));
-				output(95 downto 80) <= storage(to_integer(unsigned(addr)+5));
-				output(111 downto 96) <= storage(to_integer(unsigned(addr)+6));
-				output(127 downto 112) <= storage(to_integer(unsigned(addr)+7));
 			end if;
 		end if;
 	end process;

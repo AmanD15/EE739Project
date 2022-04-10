@@ -46,7 +46,6 @@ end entity Inst_Decode;
 architecture Decode of Inst_Decode is
 begin
 	process(clk)
-	variable op : std_logic_vector(3 downto 0);
 	begin
 		if (rising_edge(clk)) then
 			if (stall='0') then
@@ -55,7 +54,6 @@ begin
 				r_b <= inst(8 downto 6);
 				r_c <= inst(5 downto 3);
 				imm <= inst(8 downto 0);
-				op := inst(15 downto 12);
 				cz <= inst(1 downto 0);
 				pc_out <= pc;
 			end if;

@@ -9,7 +9,6 @@ component Mem_Access is
 port (stall : in std_logic;
 		clk : in std_logic;
 		-- 1 denotes write
-		readWrite : in std_logic;
 		start_address : in std_logic_vector(15 downto 0);
 		data_in : in std_logic_vector(127 downto 0);
 		data_out : out std_logic_vector(127 downto 0);
@@ -17,7 +16,10 @@ port (stall : in std_logic;
 		wb_enable : in std_logic;
 		reg_bits : in std_logic_vector(7 downto 0);
 		mem_bits : in std_logic_vector(7 downto 0);
-		mem_sr : in std_logic
+		mem_sr : in std_logic;
+		wb_out : out std_logic_vector(2 downto 0);
+		reg_bits_out : out std_logic_vector(7 downto 0);
+		wb_enable_out : out std_logic
 		); 
 end component Mem_Access;
 end package MA_stage;
@@ -32,7 +34,6 @@ entity Mem_Access is
 port (stall : in std_logic;
 		clk : in std_logic;
 		-- 1 denotes write
-		readWrite : in std_logic;
 		start_address : in std_logic_vector(15 downto 0);
 		data_in : in std_logic_vector(127 downto 0);
 		data_out : out std_logic_vector(127 downto 0);
@@ -40,7 +41,10 @@ port (stall : in std_logic;
 		wb_enable : in std_logic;
 		reg_bits : in std_logic_vector(7 downto 0);
 		mem_bits : in std_logic_vector(7 downto 0);
-		mem_sr : in std_logic
+		mem_sr : in std_logic;
+		wb_out : out std_logic_vector(2 downto 0);
+		reg_bits_out : out std_logic_vector(7 downto 0);
+		wb_enable_out : out std_logic
 		); 
 end entity Mem_Access;
 
@@ -59,8 +63,13 @@ begin
 			if (stall = '0') then
 				if (mem_bits = "00000000") then
 					data_out <= data_in;
-				else data_out <= data_mem;
+					reg_bits_out <= "00000000";
+				else
+					data_out <= data_mem;
+					reg_bits_out <= reg_bits;
 				end if;
+				wb_out <= wb_in;
+				wb_enable_out <= wb_enable;
 			end if;
 		end if;
 	end process;

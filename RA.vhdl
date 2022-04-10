@@ -17,7 +17,6 @@ port (stall_r : in std_logic;
 		imm : in std_logic_vector(8 downto 0);
 		op_code : in std_logic_vector(3 downto 0);
 		cz : in std_logic_vector(1 downto 0);
-		data_mem : in std_logic_vector(127 downto 0);
 		data_out : out std_logic_vector(127 downto 0);
 		cz_out : out std_logic_vector(1 downto 0);		
 		r_co : out std_logic_vector(2 downto 0);
@@ -34,9 +33,9 @@ port (stall_r : in std_logic;
 		
 		-- write_back
 		enable_5 : in std_logic ;
-		data_5 : in std_logic_vector(data_width-1 downto 0);
+		data_5 : in std_logic_vector(127 downto 0);
 		addr_5 : in std_logic_vector(2 downto 0);
-		mem_addr_5 : in std_logic_vector(7 downto 0)
+		reg_addr_5 : in std_logic_vector(7 downto 0)
 		);
 end component register_read;
 end package RA_stage;
@@ -59,7 +58,6 @@ port (stall_r : in std_logic;
 		imm : in std_logic_vector(8 downto 0);
 		op_code : in std_logic_vector(3 downto 0);
 		cz : in std_logic_vector(1 downto 0);
-		data_mem : in std_logic_vector(127 downto 0);
 		data_out : out std_logic_vector(127 downto 0);
 		cz_out : out std_logic_vector(1 downto 0);		
 		r_co : out std_logic_vector(2 downto 0);
@@ -76,9 +74,9 @@ port (stall_r : in std_logic;
 		
 		-- write_back
 		enable_5 : in std_logic ;
-		data_5 : in std_logic_vector(data_width-1 downto 0);
+		data_5 : in std_logic_vector(127 downto 0);
 		addr_5 : in std_logic_vector(2 downto 0);
-		mem_addr_5 : in std_logic_vector(7 downto 0)
+		reg_addr_5 : in std_logic_vector(7 downto 0)
 		);
 end entity register_read;
 
@@ -93,14 +91,31 @@ begin
 	variable data_out_var : std_logic_vector(127 downto 0);
 	variable r_co_var : std_logic_vector(2 downto 0);
 	variable imm_o : std_logic_vector(data_width-1 downto 0);
-	variable num_acc_var : integer;
+	variable num_acc_var, num_wb_var : integer;
 	variable mem_updates_var : std_logic_vector(7 downto 0);
 	variable mem_sr_var : std_logic;
+	variable data_wb_var : RF;
 	begin
 	if (rising_edge(clk)) then
 		if(stall_w = '0') then 
-			if (enable_5='1') then
-				RFile(to_integer(unsigned(addr_5))) <= data_5;
+			if (reg_addr_5="00000000" and enable_5='1') then
+				RFile(to_integer(unsigned(addr_5))) <= data_5(15 downto 0);
+			elsif (reg_addr_5 /= "00000000") then
+				num_wb_var := 0;
+				data_wb_var(7) := data_5(127 downto 112);
+				data_wb_var(6) := data_5(111 downto 96);
+				data_wb_var(5) := data_5(95 downto 80);
+				data_wb_var(4) := data_5(79 downto 64);
+				data_wb_var(3) := data_5(63 downto 48);
+				data_wb_var(2) := data_5(47 downto 32);
+				data_wb_var(1) := data_5(31 downto 16);
+				data_wb_var(0) := data_5(15 downto 0);
+				for i in 0 to 7 loop
+					if (reg_addr_5(i) = '1') then
+						RFile(i) <= data_wb_var(num_wb_var);
+						num_wb_var := num_wb_var + 1;
+					end if;
+				end loop;
 			end if;
 		end if;
 		if (stall_r = '0') then
