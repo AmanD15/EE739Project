@@ -31,7 +31,12 @@ port (stall_r : in std_logic;
 		--forwarding
 		data_in_alu : in std_logic_vector(15 downto 0) ;
 		wb_in_alu : in std_logic_vector(2 downto 0);
-		
+		wb_enbl_alu : in std_logic 
+
+		data_in_mem : in std_logic_vector(15 downto 0) ;
+		wb_in_mem : in std_logic_vector(2 downto 0);
+		wb_enbl_mem : in std_logic
+
 		-- write_back
 		enable_5 : in std_logic ;
 		data_5 : in std_logic_vector(127 downto 0);
@@ -73,6 +78,11 @@ port (stall_r : in std_logic;
 		--forwarding
 		data_in_alu : in std_logic_vector(15 downto 0) ;
 		wb_in_alu : in std_logic_vector(2 downto 0);
+		wb_enbl_alu : in std_logic 
+
+		data_in_mem : in std_logic_vector(15 downto 0) ;
+		wb_in_mem : in std_logic_vector(2 downto 0);
+		wb_enbl_mem : in std_logic
 		
 		-- write_back
 		enable_5 : in std_logic ;
@@ -135,7 +145,26 @@ begin
 				when "0011" => imm_o := imm & (data_width-1 downto imm'length => '0') ;
 				when others => null;
 			end case;
-						
+			
+			-- forwarding from alu
+			if wb_enbl_alu then
+				if (r_a = wb_in_alu) then 
+					temp_a := data_in_alu;
+				end if;
+				if (r_b = wb_in_alu) then 
+					temp_b := data_in_alu;
+				end if;
+			end if; 
+
+			if wb_enbl_mem then
+				if (r_a = wb_in_mem) then 
+					temp_a := data_in_mem;
+				end if;
+				if (r_b = wb_in_mem) then 
+					temp_b := data_in_mem;
+				end if;				
+			end if;
+
 			case op_code is 
 				-- add/nand
 				when "0001"|"0010" => 
@@ -227,14 +256,7 @@ begin
 				
 				when others => null;
 			end case;
-			
-			-- forwarding from alu
---			if (r_a = wb_in_alu) then
---				data_out_var(15 downto 0) := data_in_alu;
---			end if;
---			if (r_b = wb_in_alu) then
---				data_out_var(31 downto 16) := data_in_alu;
---			end if;				
+						
 				
 			data_out <= data_out_var;
 			r_co <= r_co_var;

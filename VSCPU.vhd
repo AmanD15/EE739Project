@@ -71,8 +71,8 @@ end process;
 
 address <= addr when (write_flag = '1') else pc_fet;
 stall_stage2_in <= stall or control_hazard or stall_stage1_out;
-stall_stage3_in <= stall or stall_stage2_out;
-stall_stage4_in <= stall or stall_stage3_out;
+stall_stage3_in <= stall or control_hazard or stall_stage2_out;
+stall_stage4_in <= stall or control_hazard or stall_stage3_out;
 stall_stage5_in <= stall or stall_stage4_out;
 stall_stage6_in <= stall or stall_stage5_out;
 
@@ -124,6 +124,8 @@ stage3 : register_read port map (stall_r => stall_stage3_in,
 							mem_address_out => mem_add_in_alu,
 							data_in_alu => data_out_alu(15 downto 0),
 							wb_in_alu => wb_out_alu,
+							data_in_mem => ma_data_out(15 downto 0),
+							wb_in_mem => wb_out_ma,
 							reg_updates => reg_upd_ra,
 							mem_updates => mem_upd_ra,
 							mem_sr => ms_ra,
