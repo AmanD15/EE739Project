@@ -21,11 +21,11 @@ architecture arch of TB_VSCPU is
 		data_in: in std_logic_vector;
 		i : inout integer) is
 	begin
-		wait until (clk='0');
+		wait until (clk='1');
 		write_flag <= '1';
 		addr_out <= int2slv(i,addr_out'length);
 		data_out <= data_in;
-		wait until (clk='1');
+		wait until (clk='0');
 		write_flag <= '0';
 		i := i + 1;
 	end procedure;
@@ -38,7 +38,7 @@ begin
 	process
 	variable num_funcs : integer := 10;
 	variable data_to_write : std_logic_vector(data_width-1 downto 0);
-	variable i : integer := 1;
+	variable i : integer := 0;
 	
 	begin
 	wait until clk='0';
@@ -46,12 +46,25 @@ begin
 	wait until clk='1';
 	reset <= '0';
 
-----	load
---	data_to_write := int2slv(INSTRUCTION'pos(LOAD),data_width-addr_width) & int2slv(num_funcs+4,addr_width);
---	next_input(clk,write_flag,addr,data,data_to_write,i);
 ----	add
---	data_to_write := int2slv(INSTRUCTION'pos(ADD),data_width-addr_width) & int2slv(num_funcs+3,addr_width);
---	next_input(clk,write_flag,addr,data,data_to_write,i);
+	data_to_write := "0000"&"000"&"010"&"000101";
+	next_input(clk,write_flag,addr,data,data_to_write,i);
+	
+	data_to_write := "0000"&"001"&"000"&"001101";
+	next_input(clk,write_flag,addr,data,data_to_write,i);
+	
+	data_to_write := "0000"&"100"&"001"&"001011";
+	next_input(clk,write_flag,addr,data,data_to_write,i);
+	
+	data_to_write := "0000"&"011"&"000"&"101101";
+	next_input(clk,write_flag,addr,data,data_to_write,i);
+	
+	data_to_write := "0000"&"010"&"010"&"000111";
+	next_input(clk,write_flag,addr,data,data_to_write,i);
+	
+	data_to_write := "0000"&"101"&"000"&"111101";
+	next_input(clk,write_flag,addr,data,data_to_write,i);
+
 ----	srlv
 --	data_to_write := int2slv(INSTRUCTION'pos(SRLV),data_width-addr_width) & int2slv(num_funcs+1,addr_width);
 --	next_input(clk,write_flag,addr,data,data_to_write,i);
