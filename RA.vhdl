@@ -98,7 +98,7 @@ begin
 	begin
 	if (rising_edge(clk)) then
 		if(stall_w = '0') then 
-			if (reg_addr_5="00000000" and enable_5='1') then
+			if (enable_5='1') then
 				RFile(to_integer(unsigned(addr_5))) <= data_5(15 downto 0);
 			elsif (reg_addr_5 /= "00000000") then
 				num_wb_var := 0;
@@ -227,13 +227,12 @@ begin
 			end case;
 			
 			-- forwarding from alu
-			if (r_a = wb_in_alu) then
-				data_out_var(15 downto 0) := data_in_alu;
-			end if;
-			if (r_b = wb_in_alu) then
-				data_out_var(31 downto 16) := data_in_alu;
-			end if;				
-			-- from memory as well
+--			if (r_a = wb_in_alu) then
+--				data_out_var(15 downto 0) := data_in_alu;
+--			end if;
+--			if (r_b = wb_in_alu) then
+--				data_out_var(31 downto 16) := data_in_alu;
+--			end if;				
 				
 			data_out <= data_out_var;
 			r_co <= r_co_var;

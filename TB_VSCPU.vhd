@@ -46,23 +46,35 @@ begin
 	wait until clk='1';
 	reset <= '0';
 
-----	add
-	data_to_write := "0000"&"000"&"010"&"000101";
+--	addi to initialize few registers
+	data_to_write := "0000"&"010"&"000"&"000101";
 	next_input(clk,write_flag,addr,data,data_to_write,i);
 	
-	data_to_write := "0000"&"001"&"000"&"001101";
+	data_to_write := "0000"&"000"&"001"&"001101";
 	next_input(clk,write_flag,addr,data,data_to_write,i);
 	
-	data_to_write := "0000"&"100"&"001"&"001011";
+	data_to_write := "0000"&"001"&"100"&"001011";
 	next_input(clk,write_flag,addr,data,data_to_write,i);
 	
-	data_to_write := "0000"&"011"&"000"&"101101";
+	data_to_write := "0000"&"000"&"011"&"101101";
 	next_input(clk,write_flag,addr,data,data_to_write,i);
 	
-	data_to_write := "0000"&"010"&"010"&"000111";
+	data_to_write := "0000"&"011"&"010"&"000111";
 	next_input(clk,write_flag,addr,data,data_to_write,i);
 	
-	data_to_write := "0000"&"101"&"000"&"111101";
+	data_to_write := "0000"&"100"&"101"&"111101";
+	next_input(clk,write_flag,addr,data,data_to_write,i);
+	
+	-- store all
+	data_to_write := "1111"&"000"&"000000000";
+	next_input(clk,write_flag,addr,data,data_to_write,i);
+	
+	-- store one reg to memory
+	data_to_write := "0101"&"000"&"111"&"000000";
+	next_input(clk,write_flag,addr,data,data_to_write,i);
+	
+	-- load multiple
+	data_to_write := "1100"&"000"&"001111111";
 	next_input(clk,write_flag,addr,data,data_to_write,i);
 
 ----	srlv
