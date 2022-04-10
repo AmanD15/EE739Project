@@ -41,7 +41,9 @@ signal ma_data_out, data_ra, data_out_alu: std_logic_vector(127 downto 0);
 signal ms_ra, ms_alu : std_logic;
 signal control_hazard : std_logic;
 signal alu_valid, alu_valid_n, alu_valid_nn, alu_valid_nnn : std_logic := '0';
-
+signal stall_stage1_out, stall_stage2_out, stall_stage3_out, stall_stage4_out, stall_stage5_out : std_logic;
+signal stall_stage2_in, stall_stage3_in, stall_stage4_in, stall_stage5_in, stall_stage6_in: std_logic;
+signal stall_stage1, stall_stage2, stall_stage3, stall_stage4: std_logic;
 begin
 
 process(clk,reset)
@@ -68,6 +70,11 @@ begin
 end process;
 
 address <= addr when (write_flag = '1') else pc_fet;
+stall_stage2_in <= stall or control_hazard or stall_stage1_out;
+stall_stage3_in <= stall or stall_stage2_out;
+stall_stage4_in <= stall or stall_stage3_out;
+stall_stage5_in <= stall or stall_stage4_out;
+stall_stage6_in <= stall or stall_stage5_out;
 
 Inst_Mem : memory port map (clk => clk, addr => address, data => data,
 							readWrite => write_flag ,output => inst_f
@@ -77,10 +84,11 @@ stage1 : Inst_Fetch port map (stall => stall,
 							clk => clk,
 							pc => pc,
 							pc_out => pc_fet,
-							control_hazard => control_hazard
+							control_hazard => control_hazard,
+							stall_out => stall_stage1_out
 							);
 
-stage2 : Inst_Decode port map (stall => stall,
+stage2 : Inst_Decode port map (stall => stall_stage2_in,
 							pc => pc_fet,
 							clk => clk,
 							inst => inst_f, 
@@ -90,11 +98,12 @@ stage2 : Inst_Decode port map (stall => stall,
 							r_c => r_c_dec , 
 							imm => imm_dec,
 							cz => cz_dec,
-							pc_out => pc_dec_out
+							pc_out => pc_dec_out,
+							stall_out => stall_stage2_out
 							);
 							
-stage3 : register_read port map (stall_r => stall,
-							stall_w => stall,
+stage3 : register_read port map (stall_r => stall_stage3_in,
+							stall_w => stall_stage6_in,
 							clk=>clk,
 							pc => pc_dec_out,
 							r_a => r_a_dec,
@@ -117,10 +126,11 @@ stage3 : register_read port map (stall_r => stall,
 							wb_in_alu => wb_out_alu,
 							reg_updates => reg_upd_ra,
 							mem_updates => mem_upd_ra,
-							mem_sr => ms_ra
+							mem_sr => ms_ra,
+							stall_out => stall_stage3_out
 							);
 		
-stage4 : Execute port map (stall=> stall,
+stage4 : Execute port map (stall=> stall_stage4_in,
 							clk=> clk,
 							pc=>pc_ra,
 							op_code=> op_ra,
@@ -138,10 +148,11 @@ stage4 : Execute port map (stall=> stall,
 							pc_next =>pc_alu,
 							mem_add_out => mem_add_out_alu,
 							mem_sr => ms_ra,
-							mem_sr_out => ms_alu
+							mem_sr_out => ms_alu,
+							stall_out => stall_stage4_out
 							);
 							
-stage5 : Mem_Access port map (stall => stall,
+stage5 : Mem_Access port map (stall => stall_stage5_in,
 							clk => clk,
 							start_address => mem_add_out_alu,
 							data_in => data_out_alu,
@@ -153,6 +164,7 @@ stage5 : Mem_Access port map (stall => stall,
 							mem_sr => ms_alu,
 							wb_out => wb_out_ma,
 							wb_enable_out => wb_enable_ma,
-							reg_bits_out => reg_upd_ma
+							reg_bits_out => reg_upd_ma,
+							stall_out => stall_stage5_out
 							);
 end architecture arch;

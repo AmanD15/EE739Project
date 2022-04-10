@@ -7,6 +7,7 @@ use work.my_pkg.all;
 package ID_Stage is
 component Inst_Decode is
 port (stall : in std_logic;
+		stall_out : out std_logic;
 		pc : in std_logic_vector(15 downto 0);
 		clk : in std_logic;
 		inst : in std_logic_vector(15 downto 0);
@@ -30,6 +31,7 @@ use work.my_pkg.all;
 entity Inst_Decode is
 port (stall : in std_logic;
 		pc : in std_logic_vector(15 downto 0);
+		stall_out : out std_logic;
 		clk : in std_logic;
 		inst : in std_logic_vector(15 downto 0);
 		op_code : out std_logic_vector(3 downto 0);
@@ -57,6 +59,7 @@ begin
 				cz <= inst(1 downto 0);
 				pc_out <= pc;
 			end if;
+			stall_out <= stall;
 		end if;
 	end process;
 end architecture Decode;

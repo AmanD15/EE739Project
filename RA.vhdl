@@ -9,6 +9,7 @@ component register_read is
 generic (inst_width : integer := 16;data_width : integer := 16);
 port (stall_r : in std_logic;
 		stall_w : in std_logic;
+		stall_out : out std_logic;
 		clk : in std_logic;
 		pc : in std_logic_vector(15 downto 0);
 		r_a : in std_logic_vector(2 downto 0);
@@ -50,6 +51,7 @@ entity register_read is
 generic (inst_width : integer := 16;data_width : integer := 16);
 port (stall_r : in std_logic;
 		stall_w : in std_logic;
+		stall_out : out std_logic;
 		clk : in std_logic;
 		pc : in std_logic_vector(15 downto 0);
 		r_a : in std_logic_vector(2 downto 0);
@@ -242,6 +244,7 @@ begin
 			mem_updates <= mem_updates_var;
 			mem_sr <= mem_sr_var;
 		end if;
+		stall_out <= stall_r;
 	end if ;
 	end process;
 end architecture Reg;

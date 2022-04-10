@@ -9,6 +9,7 @@ component Execute is
 generic (inst_width : integer := 16);
 port (stall : in std_logic;
 		clk : in std_logic;
+		stall_out : out std_logic;
 		pc : in std_logic_vector(15 downto 0);
 		op_code : in std_logic_vector(3 downto 0);
 		cz : in std_logic_vector(1 downto 0);
@@ -40,6 +41,7 @@ entity Execute is
 generic (inst_width : integer := 16);
 port (stall : in std_logic;
 		clk : in std_logic;
+		stall_out : out std_logic;
 		pc : in std_logic_vector(15 downto 0);
 		op_code : in std_logic_vector(3 downto 0);
 		cz : in std_logic_vector(1 downto 0);
@@ -183,6 +185,7 @@ begin
 				reg_bits_out <= reg_bits;
 				mem_sr_out <= mem_sr;
 			end if;
+			stall_out <= stall;
 		end if;
 	end process;
 end architecture Exec;

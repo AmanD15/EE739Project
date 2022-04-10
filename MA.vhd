@@ -8,6 +8,7 @@ package MA_stage is
 component Mem_Access is
 port (stall : in std_logic;
 		clk : in std_logic;
+		stall_out : out std_logic;
 		-- 1 denotes write
 		start_address : in std_logic_vector(15 downto 0);
 		data_in : in std_logic_vector(127 downto 0);
@@ -33,6 +34,7 @@ use work.my_pkg.all;
 entity Mem_Access is
 port (stall : in std_logic;
 		clk : in std_logic;
+		stall_out : out std_logic;
 		-- 1 denotes write
 		start_address : in std_logic_vector(15 downto 0);
 		data_in : in std_logic_vector(127 downto 0);
@@ -71,6 +73,7 @@ begin
 				wb_out <= wb_in;
 				wb_enable_out <= wb_enable;
 			end if;
+			stall_out <= stall;
 		end if;
 	end process;
 end architecture Mem_Arch;
